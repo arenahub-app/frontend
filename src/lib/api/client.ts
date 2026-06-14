@@ -27,7 +27,7 @@ apiClient.interceptors.response.use(
     }
 
     if (isRefreshing) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         pendingRequests.push((token) => {
           original.headers.Authorization = `Bearer ${token}`
           resolve(apiClient(original))

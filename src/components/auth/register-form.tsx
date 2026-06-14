@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/card'
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth'
 import { authApi } from '@/lib/api/auth'
+import type { ApiError } from '@/lib/api/errors'
 import { useAuth } from '@/providers/auth-provider'
 
 export function RegisterForm() {
@@ -47,8 +48,8 @@ export function RegisterForm() {
       )
       router.push('/dashboard')
     },
-    onError: (error: any) => {
-      const status = error?.response?.status
+    onError: (error: ApiError) => {
+      const status = error.response?.status
       if (status === 409) toast.error('Este email já está cadastrado')
       else toast.error('Erro ao criar conta. Tente novamente.')
     },

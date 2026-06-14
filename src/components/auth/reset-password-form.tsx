@@ -18,6 +18,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { resetPasswordSchema, type ResetPasswordInput } from '@/lib/validations/auth'
 import { authApi } from '@/lib/api/auth'
+import type { ApiError } from '@/lib/api/errors'
 
 interface Props {
   token: string
@@ -41,8 +42,8 @@ export function ResetPasswordForm({ token }: Props) {
       toast.success('Senha redefinida com sucesso!')
       router.push('/login')
     },
-    onError: (error: any) => {
-      const status = error?.response?.status
+    onError: (error: ApiError) => {
+      const status = error.response?.status
       if (status === 400) toast.error('Link inválido ou expirado')
       else toast.error('Erro ao redefinir senha. Tente novamente.')
     },

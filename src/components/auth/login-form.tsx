@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
 import { loginSchema, type LoginInput } from '@/lib/validations/auth'
 import { authApi } from '@/lib/api/auth'
+import type { ApiError } from '@/lib/api/errors'
 import { useAuth } from '@/providers/auth-provider'
 
 export function LoginForm() {
@@ -39,11 +40,11 @@ export function LoginForm() {
       signIn(data)
       router.push('/dashboard')
     },
-    onError: (error: any) => {
-      const status = error?.response?.status
+    onError: (error: ApiError) => {
+      const status = error.response?.status
       if (status === 401) toast.error('Email ou senha incorretos')
       else if (status === 403) {
-        const type = error?.response?.data?.type ?? ''
+        const type = error.response?.data?.type ?? ''
         if (type.includes('email-not-verified'))
           toast.error('Confirme seu email antes de fazer login')
         else toast.error('Conta inativa')

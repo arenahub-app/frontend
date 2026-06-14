@@ -1,7 +1,6 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { redirect } from 'next/navigation'
 import { ResetPasswordForm } from '@/components/auth/reset-password-form'
 import {
   Card,
