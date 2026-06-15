@@ -3,7 +3,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -25,7 +24,6 @@ import type { ApiError } from '@/lib/api/errors'
 import { useAuth } from '@/providers/auth-provider'
 
 export function LoginForm() {
-  const router = useRouter()
   const { signIn } = useAuth()
 
   const {
@@ -38,7 +36,7 @@ export function LoginForm() {
     mutationFn: authApi.login,
     onSuccess: (data) => {
       signIn(data)
-      router.push('/dashboard')
+      window.location.href = '/dashboard'
     },
     onError: (error: ApiError) => {
       const status = error.response?.status
