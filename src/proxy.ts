@@ -12,14 +12,6 @@ const PUBLIC_PATHS = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (pathname.startsWith('/api/v1/')) {
-    const backendUrl = process.env.BACKEND_URL
-    if (backendUrl) {
-      const target = new URL(pathname + request.nextUrl.search, backendUrl)
-      return NextResponse.rewrite(target)
-    }
-  }
-
   const hasRefreshCookie = request.cookies.has('refresh_token')
   const isPublicPath = PUBLIC_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}?`),
@@ -37,7 +29,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/api/v1/:path*',
-    '/((?!_next/static|_next/image|favicon.ico|api/).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
 }
