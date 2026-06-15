@@ -31,37 +31,25 @@ describe('API proxy route handler', () => {
   })
 
   it('proxies GET to correct upstream URL', async () => {
-    const mockResponse = new Response('[]', { status: 200 })
-    vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse)
-
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('[]', { status: 200 }))
     await GET(makeRequest('GET', 'groups'), await makeCtx(['groups']))
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.objectContaining({
-        url: 'https://backend.test/api/v1/groups',
-      }),
-    )
+    const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toBe('https://backend.test/api/v1/groups')
   })
 
   it('proxies nested path correctly', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue(new Response('{}', { status: 200 }))
-
     await GET(makeRequest('GET', 'groups/123/members'), await makeCtx(['groups', '123', 'members']))
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.objectContaining({ url: 'https://backend.test/api/v1/groups/123/members' }),
-    )
+    const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toBe('https://backend.test/api/v1/groups/123/members')
   })
 
   it('preserves query string', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue(new Response('[]', { status: 200 }))
     const req = new Request('https://app.test/api/v1/groups?page=2&size=10', { method: 'GET' })
-
     await GET(req, await makeCtx(['groups']))
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.objectContaining({ url: 'https://backend.test/api/v1/groups?page=2&size=10' }),
-    )
+    const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toBe('https://backend.test/api/v1/groups?page=2&size=10')
   })
 
   it('forwards Cookie header to upstream', async () => {
@@ -70,11 +58,9 @@ describe('API proxy route handler', () => {
       headers: { Cookie: 'refresh_token=abc123', 'Content-Type': 'application/json' },
       body: '{}',
     })
-
     await POST(req, await makeCtx(['auth', 'refresh']))
-
-    const calledReq = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as Request
-    expect(calledReq.headers.get('cookie')).toBe('refresh_token=abc123')
+    const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect((init.headers as Headers).get('cookie')).toBe('refresh_token=abc123')
   })
 
   it('returns upstream response including Set-Cookie', async () => {
@@ -86,20 +72,16 @@ describe('API proxy route handler', () => {
       },
     })
     vi.spyOn(global, 'fetch').mockResolvedValue(upstream)
-
     const res = await POST(makeRequest('POST', 'auth/login', { body: '{}' }), await makeCtx(['auth', 'login']))
-
     expect(res.status).toBe(200)
     expect(res.headers.get('set-cookie')).toContain('refresh_token=xyz')
   })
 
   it('proxies DELETE with correct method', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue(new Response(null, { status: 204 }))
-
     const res = await DELETE(makeRequest('DELETE', 'groups/123'), await makeCtx(['groups', '123']))
-
     expect(res.status).toBe(204)
-    const calledReq = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as Request
-    expect(calledReq.method).toBe('DELETE')
+    const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(init.method).toBe('DELETE')
   })
 })

@@ -14,13 +14,12 @@ async function proxy(request: Request, path: string[]): Promise<Response> {
   const headers = new Headers(request.headers)
   headers.delete('host')
 
-  const init: RequestInit & { duplex?: string } = { method: request.method, headers }
+  let body: ArrayBuffer | null = null
   if (request.method !== 'GET' && request.method !== 'HEAD') {
-    init.body = request.body
-    init.duplex = 'half'
+    body = await request.arrayBuffer()
   }
 
-  return fetch(new Request(target, init))
+  return fetch(target.toString(), { method: request.method, headers, body })
 }
 
 export function GET(req: Request, ctx: RouteContext) {
