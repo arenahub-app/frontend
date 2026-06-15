@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react'
 import { authApi, type AuthResponse } from '@/lib/api/auth'
-import { setToken } from '@/lib/api/token'
+import { getToken, setToken } from '@/lib/api/token'
 
 interface AuthUser {
   id: string
@@ -52,8 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(decodeUser(data.accessToken))
       })
       .catch(() => {
-        setToken(null)
-        setUser(null)
+        if (!getToken()) {
+          setToken(null)
+          setUser(null)
+        }
       })
       .finally(() => setIsLoading(false))
   }, [])
