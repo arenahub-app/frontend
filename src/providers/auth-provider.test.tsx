@@ -62,7 +62,6 @@ describe('AuthProvider', () => {
   })
 
   it('does not overwrite user when refresh fails after signIn already ran', async () => {
-    let capturedSignIn: ((data: typeof AUTH_RESPONSE) => void) | null = null
     let rejectRefresh!: (reason?: unknown) => void
     const refreshPromise = new Promise<typeof AUTH_RESPONSE>((_, rej) => {
       rejectRefresh = rej
@@ -71,15 +70,19 @@ describe('AuthProvider', () => {
 
     function SignInCapture() {
       const { signIn, user } = useAuth()
-      capturedSignIn = signIn
       if (user) return <span>user:{user.email}</span>
-      return <span>no-user</span>
+      return (
+        <>
+          <span>no-user</span>
+          <button onClick={() => signIn(AUTH_RESPONSE)}>do-signin</button>
+        </>
+      )
     }
 
     wrap(<SignInCapture />)
     await waitFor(() => screen.getByText('no-user'))
 
-    act(() => capturedSignIn!(AUTH_RESPONSE))
+    await userEvent.click(screen.getByRole('button', { name: 'do-signin' }))
     await waitFor(() => expect(screen.getByText('user:user@test.com')).toBeDefined())
 
     await act(async () => rejectRefresh(new Error('401')))
