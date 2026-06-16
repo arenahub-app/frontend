@@ -68,6 +68,7 @@ export interface Member {
   id: string
   userId: string
   groupId: string
+  userName: string | null
   role: GroupRole
   skill: number
   skillSource: SkillSource

@@ -3,6 +3,7 @@ import { Oswald, DM_Sans } from 'next/font/google'
 import './globals.css'
 import { QueryProvider } from '@/providers/query-provider'
 import { AuthProvider } from '@/providers/auth-provider'
+import { ThemeProvider } from '@/providers/theme-provider'
 import { Toaster } from 'sonner'
 
 const oswald = Oswald({
@@ -27,14 +28,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className={`${oswald.variable} ${dmSans.variable}`}>
+    <html lang="pt-BR" className={`${oswald.variable} ${dmSans.variable} dark`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-body antialiased">
-        <QueryProvider>
-          <AuthProvider>
-            {children}
-            <Toaster richColors position="top-right" />
-          </AuthProvider>
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <AuthProvider>
+              {children}
+              <Toaster richColors position="top-right" />
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
