@@ -10,6 +10,11 @@ Object.defineProperty(window, 'location', {
   writable: false,
 })
 
+vi.mock('next/navigation', () => ({
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+  useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
+}))
+
 vi.mock('@/providers/auth-provider', () => ({
   useAuth: vi.fn(),
 }))
