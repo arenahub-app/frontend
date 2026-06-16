@@ -89,14 +89,15 @@ describe('LoginForm', () => {
     })
   })
 
-  it('shows "Entrando..." while request is pending', async () => {
+  it('disables submit button with spinner while request is pending', async () => {
     vi.mocked(authApi.login).mockReturnValue(new Promise(() => {}))
-    wrap(<LoginForm />)
+    const { container } = wrap(<LoginForm />)
     await userEvent.type(screen.getByLabelText(/email/i), 'user@test.com')
     await userEvent.type(screen.getByLabelText(/^senha$/i), 'password123')
     await userEvent.click(screen.getByRole('button', { name: /entrar/i }))
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /entrando/i })).toBeDefined()
+      const submit = container.querySelector('button[type="submit"]')
+      expect(submit!.hasAttribute('disabled')).toBe(true)
     })
   })
 
