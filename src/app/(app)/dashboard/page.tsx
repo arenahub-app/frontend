@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useAuth } from '@/providers/auth-provider'
 import { Button } from '@/components/ui/button'
 
@@ -11,7 +12,9 @@ export default function DashboardPage() {
       <h1 className="font-display text-title text-arena-text uppercase">
         Olá, {user?.email}
       </h1>
-      <p className="text-caption text-arena-muted">Dashboard em construção</p>
+      <Button variant="primary" size="sm" render={<Link href="/groups" />}>
+        Meus grupos
+      </Button>
       <Button variant="danger" size="sm" onClick={() => signOut()}>
         Sair
       </Button>

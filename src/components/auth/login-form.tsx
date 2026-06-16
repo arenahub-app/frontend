@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,6 +37,8 @@ function GoogleIcon() {
 
 export function LoginForm() {
   const { signIn } = useAuth()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') ?? '/dashboard'
 
   const {
     register,
@@ -47,7 +50,7 @@ export function LoginForm() {
     mutationFn: authApi.login,
     onSuccess: (data) => {
       signIn(data)
-      window.location.href = '/dashboard'
+      window.location.href = redirect
     },
     onError: (error: ApiError) => {
       const status = error.response?.status
