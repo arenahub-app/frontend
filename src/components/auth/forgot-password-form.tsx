@@ -39,7 +39,7 @@ export function ForgotPasswordForm() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Email enviado</CardTitle>
+          <CardTitle>Email enviado</CardTitle>
         </CardHeader>
         <CardContent>
           <Alert>
@@ -52,7 +52,7 @@ export function ForgotPasswordForm() {
         <CardFooter>
           <Link
             href="/login"
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-sm text-arena-muted hover:text-arena-text"
           >
             ← Voltar para o login
           </Link>
@@ -63,19 +63,20 @@ export function ForgotPasswordForm() {
 
   return (
     <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">Esqueceu a senha?</CardTitle>
+      <CardHeader>
+        <CardTitle>Esqueceu a senha?</CardTitle>
         <CardDescription>
           Informe seu email e enviaremos um link para redefinir sua senha.
         </CardDescription>
       </CardHeader>
+
       <CardContent>
         <form
           onSubmit={handleSubmit((data) => mutation.mutate(data))}
-          className="space-y-4"
+          className="flex flex-col gap-4"
           noValidate
         >
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
@@ -85,23 +86,26 @@ export function ForgotPasswordForm() {
               {...register('email')}
             />
             {errors.email && (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
+              <p className="text-xs text-arena-danger">{errors.email.message}</p>
             )}
           </div>
 
           <Button
             type="submit"
+            variant="primary"
+            size="md"
             className="w-full"
-            disabled={mutation.isPending}
+            loading={mutation.isPending}
           >
-            {mutation.isPending ? 'Enviando...' : 'Enviar link de redefinição'}
+            Enviar link de redefinição
           </Button>
         </form>
       </CardContent>
+
       <CardFooter>
         <Link
           href="/login"
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="text-sm text-arena-muted hover:text-arena-text"
         >
           ← Voltar para o login
         </Link>

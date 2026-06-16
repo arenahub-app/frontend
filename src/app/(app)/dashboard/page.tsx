@@ -7,10 +7,12 @@ export default function DashboardPage() {
   const { user, signOut } = useAuth()
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-2xl font-semibold">Olá, {user?.email}</h1>
-      <p className="text-muted-foreground">Dashboard em construção</p>
-      <Button variant="outline" onClick={() => signOut()}>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-arena-bg">
+      <h1 className="font-display text-title text-arena-text uppercase">
+        Olá, {user?.email}
+      </h1>
+      <p className="text-caption text-arena-muted">Dashboard em construção</p>
+      <Button variant="danger" size="sm" onClick={() => signOut()}>
         Sair
       </Button>
     </div>

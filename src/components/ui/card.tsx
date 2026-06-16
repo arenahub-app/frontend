@@ -15,7 +15,7 @@ function Card({
     <div
       data-slot="card"
       className={cn(
-        "flex flex-col overflow-hidden rounded-card bg-arena-surface border border-arena-border text-arena-text",
+        "flex flex-col gap-4 overflow-hidden rounded-card bg-arena-surface border border-arena-border text-arena-text",
         padded && "p-4",
         pressable && "cursor-pointer transition-transform active:scale-[0.98]",
         className
@@ -65,7 +65,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-footer"
-      className={cn("flex items-center border-t border-arena-border pt-3 mt-3", className)}
+      className={cn("flex items-center border-t border-arena-border pt-3", className)}
       {...props}
     />
   )

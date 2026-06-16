@@ -43,9 +43,7 @@ export function RegisterForm() {
       }),
     onSuccess: (data) => {
       signIn(data)
-      toast.success(
-        'Conta criada! Verifique seu email para ativar sua conta.',
-      )
+      toast.success('Conta criada! Verifique seu email para ativar sua conta.')
       router.push('/dashboard')
     },
     onError: (error: ApiError) => {
@@ -57,17 +55,18 @@ export function RegisterForm() {
 
   return (
     <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">Criar conta</CardTitle>
+      <CardHeader>
+        <CardTitle>Criar conta</CardTitle>
         <CardDescription>Junte-se ao ArenaHub</CardDescription>
       </CardHeader>
+
       <CardContent>
         <form
           onSubmit={handleSubmit((data) => mutation.mutate(data))}
-          className="space-y-4"
+          className="flex flex-col gap-4"
           noValidate
         >
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="name">Nome completo</Label>
             <Input
               id="name"
@@ -76,11 +75,11 @@ export function RegisterForm() {
               {...register('name')}
             />
             {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
+              <p className="text-xs text-arena-danger">{errors.name.message}</p>
             )}
           </div>
 
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
@@ -90,12 +89,12 @@ export function RegisterForm() {
               {...register('email')}
             />
             {errors.email && (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
+              <p className="text-xs text-arena-danger">{errors.email.message}</p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="phone">Telefone</Label>
               <Input
                 id="phone"
@@ -105,28 +104,24 @@ export function RegisterForm() {
                 {...register('phone')}
               />
               {errors.phone && (
-                <p className="text-xs text-destructive">
-                  {errors.phone.message}
-                </p>
+                <p className="text-xs text-arena-danger">{errors.phone.message}</p>
               )}
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="birthDate">Data de nascimento</Label>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="birthDate">Nascimento</Label>
               <Input
                 id="birthDate"
                 type="date"
                 {...register('birthDate')}
               />
               {errors.birthDate && (
-                <p className="text-xs text-destructive">
-                  {errors.birthDate.message}
-                </p>
+                <p className="text-xs text-arena-danger">{errors.birthDate.message}</p>
               )}
             </div>
           </div>
 
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="password">Senha</Label>
             <Input
               id="password"
@@ -135,13 +130,11 @@ export function RegisterForm() {
               {...register('password')}
             />
             {errors.password && (
-              <p className="text-xs text-destructive">
-                {errors.password.message}
-              </p>
+              <p className="text-xs text-arena-danger">{errors.password.message}</p>
             )}
           </div>
 
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="confirmPassword">Confirmar senha</Label>
             <Input
               id="confirmPassword"
@@ -150,28 +143,26 @@ export function RegisterForm() {
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && (
-              <p className="text-xs text-destructive">
-                {errors.confirmPassword.message}
-              </p>
+              <p className="text-xs text-arena-danger">{errors.confirmPassword.message}</p>
             )}
           </div>
 
           <Button
             type="submit"
+            variant="primary"
+            size="md"
             className="w-full"
-            disabled={mutation.isPending}
+            loading={mutation.isPending}
           >
-            {mutation.isPending ? 'Criando conta...' : 'Criar conta'}
+            Criar conta
           </Button>
         </form>
       </CardContent>
+
       <CardFooter>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-arena-muted">
           Já tem conta?{' '}
-          <Link
-            href="/login"
-            className="text-foreground font-medium hover:underline"
-          >
+          <Link href="/login" className="text-arena-text font-medium hover:underline">
             Entrar
           </Link>
         </p>

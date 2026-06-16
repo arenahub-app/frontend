@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { buttonVariants } from '@/components/ui/button'
@@ -32,16 +33,17 @@ export function VerifyEmailClient() {
 
   return (
     <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">Verificação de email</CardTitle>
+      <CardHeader>
+        <CardTitle>Verificação de email</CardTitle>
         {status === 'loading' && (
           <CardDescription>Verificando seu email...</CardDescription>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
+
+      <CardContent className="gap-4">
         {status === 'loading' && (
           <div className="flex justify-center py-4">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <Loader2 className="size-6 animate-spin text-arena-accent" />
           </div>
         )}
 
@@ -52,7 +54,10 @@ export function VerifyEmailClient() {
                 Email verificado com sucesso! Agora você pode fazer login.
               </AlertDescription>
             </Alert>
-            <Link href="/login" className={buttonVariants({ className: 'w-full' })}>
+            <Link
+              href="/login"
+              className={buttonVariants({ variant: 'primary', size: 'md', className: 'w-full' })}
+            >
               Ir para o login
             </Link>
           </>
@@ -66,7 +71,10 @@ export function VerifyEmailClient() {
                 um novo link.
               </AlertDescription>
             </Alert>
-            <Link href="/login" className={buttonVariants({ variant: 'outline', className: 'w-full' })}>
+            <Link
+              href="/login"
+              className={buttonVariants({ variant: 'ghost', size: 'md', className: 'w-full' })}
+            >
               Voltar para o login
             </Link>
           </>

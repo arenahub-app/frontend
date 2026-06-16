@@ -51,14 +51,15 @@ export function ResetPasswordForm({ token }: Props) {
 
   return (
     <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">Redefinir senha</CardTitle>
+      <CardHeader>
+        <CardTitle>Redefinir senha</CardTitle>
         <CardDescription>Escolha uma nova senha para sua conta</CardDescription>
       </CardHeader>
+
       <CardContent>
         <form
           onSubmit={handleSubmit((data) => mutation.mutate(data))}
-          className="space-y-4"
+          className="flex flex-col gap-4"
           noValidate
         >
           {mutation.isError && (
@@ -69,7 +70,7 @@ export function ResetPasswordForm({ token }: Props) {
             </Alert>
           )}
 
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="newPassword">Nova senha</Label>
             <Input
               id="newPassword"
@@ -78,13 +79,11 @@ export function ResetPasswordForm({ token }: Props) {
               {...register('newPassword')}
             />
             {errors.newPassword && (
-              <p className="text-xs text-destructive">
-                {errors.newPassword.message}
-              </p>
+              <p className="text-xs text-arena-danger">{errors.newPassword.message}</p>
             )}
           </div>
 
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
             <Input
               id="confirmPassword"
@@ -93,18 +92,18 @@ export function ResetPasswordForm({ token }: Props) {
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && (
-              <p className="text-xs text-destructive">
-                {errors.confirmPassword.message}
-              </p>
+              <p className="text-xs text-arena-danger">{errors.confirmPassword.message}</p>
             )}
           </div>
 
           <Button
             type="submit"
+            variant="primary"
+            size="md"
             className="w-full"
-            disabled={mutation.isPending}
+            loading={mutation.isPending}
           >
-            {mutation.isPending ? 'Salvando...' : 'Redefinir senha'}
+            Redefinir senha
           </Button>
         </form>
       </CardContent>

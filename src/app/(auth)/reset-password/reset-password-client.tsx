@@ -2,12 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { ResetPasswordForm } from '@/components/auth/reset-password-form'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export function ResetPasswordClient() {
