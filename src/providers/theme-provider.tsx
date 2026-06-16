@@ -14,21 +14,23 @@ const ThemeContext = createContext<ThemeContextValue>({
   toggleTheme: () => {},
 })
 
+function getStoredTheme(): Theme {
+  if (typeof window === 'undefined') return 'dark'
+  const stored = localStorage.getItem('arena-theme') as Theme | null
+  return stored === 'light' ? 'light' : 'dark'
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>(getStoredTheme)
 
   useEffect(() => {
-    const stored = localStorage.getItem('arena-theme') as Theme | null
-    const resolved = stored === 'light' ? 'light' : 'dark'
-    setTheme(resolved)
-    applyTheme(resolved)
-  }, [])
+    applyTheme(theme)
+  }, [theme])
 
   function toggleTheme() {
     setTheme((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark'
       localStorage.setItem('arena-theme', next)
-      applyTheme(next)
       return next
     })
   }
