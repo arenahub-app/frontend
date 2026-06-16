@@ -11,7 +11,10 @@ import { TeamBadge, getTeamColor } from "@/components/arena/TeamBadge"
 import { PaymentRow } from "@/components/arena/PaymentRow"
 import { MatchHeader } from "@/components/arena/MatchHeader"
 
-if (process.env.NODE_ENV === "production") notFound()
+// ─── Datas fixas para mock (fora do render — React Compiler exige funções puras) ──
+const NOW = new Date("2026-06-15T20:00:00Z")
+const IN_2_DAYS  = new Date(NOW.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString()
+const AGO_3_DAYS = new Date(NOW.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString()
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
@@ -77,6 +80,8 @@ function Row({ label, children }: { label?: string; children: React.ReactNode })
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DesignSystemPage() {
+  if (process.env.NODE_ENV === "production") notFound()
+
   return (
     <div className="min-h-screen bg-arena-bg px-4 py-8 flex flex-col gap-12 max-w-lg mx-auto">
       <header>
@@ -261,7 +266,7 @@ export default function DesignSystemPage() {
       <Section title="5. MatchHeader">
         <MatchHeader
           groupName="Pelada do Bairro"
-          scheduledAt={new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString()}
+          scheduledAt={IN_2_DAYS}
           location={{ name: "Quadra do Zé", address: "Rua das Acácias, 120" }}
           maxPlayers={14}
           confirmedCount={9}
@@ -272,7 +277,7 @@ export default function DesignSystemPage() {
         />
         <MatchHeader
           groupName="Pelada do Bairro"
-          scheduledAt={new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString()}
+          scheduledAt={IN_2_DAYS}
           location={{ name: "Quadra do Zé" }}
           maxPlayers={14}
           confirmedCount={14}
@@ -283,7 +288,7 @@ export default function DesignSystemPage() {
         />
         <MatchHeader
           groupName="Liga Amadora"
-          scheduledAt={new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()}
+          scheduledAt={AGO_3_DAYS}
           location={{ name: "Arena Central" }}
           maxPlayers={10}
           confirmedCount={10}
