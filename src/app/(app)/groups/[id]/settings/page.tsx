@@ -398,13 +398,13 @@ function MemberRow({
     <div className="px-5 py-4">
       <div className="flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-medium text-arena-text truncate">
+            {member.userName ?? `ID: ${member.userId.slice(0, 12)}…`}
+          </p>
+          <div className="mt-1 flex items-center gap-2 flex-wrap">
             <Badge variant={ROLE_BADGE_VARIANT[member.role]}>{ROLE_LABELS[member.role]}</Badge>
             <span className="text-sm text-arena-accent font-medium">
               ★ {Number(member.skill).toFixed(1)}
-            </span>
-            <span className="font-mono text-xs text-arena-muted truncate">
-              {member.userId.slice(0, 12)}…
             </span>
           </div>
         </div>

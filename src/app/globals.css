@@ -124,6 +124,21 @@
   --arena-muted:       #64748b;
 }
 
+html.light {
+  /* Arena — tema claro */
+  --arena-bg:          #f1f5f9;
+  --arena-surface:     #ffffff;
+  --arena-raised:      #f8fafc;
+  --arena-border:      #e2e8f0;
+  --arena-accent:      #f97316;
+  --arena-accent-dim:  #ea6c0a;
+  --arena-success:     #16a34a;
+  --arena-warning:     #ca8a04;
+  --arena-danger:      #dc2626;
+  --arena-text:        #0f172a;
+  --arena-muted:       #64748b;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

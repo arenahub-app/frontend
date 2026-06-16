@@ -208,8 +208,8 @@ export default function GroupPage() {
                         <span className="text-caption text-arena-muted">{member.position}</span>
                       )}
                     </div>
-                    <p className="mt-1 font-mono text-xs text-arena-muted truncate">
-                      ID: {member.userId.slice(0, 12)}…
+                    <p className="mt-1 text-sm font-medium text-arena-text truncate">
+                      {member.userName ?? `ID: ${member.userId.slice(0, 12)}…`}
                     </p>
                   </div>
                 </div>
