@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Settings, Link2, Copy, Check, Plus, Loader2, Users } from 'lucide-react'
+import { ArrowLeft, Settings, Link2, Copy, Check, Plus, Loader2, Users, Calendar, MapPin, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge, Button } from '@/components/ui'
 import { useGroup, useGroupMembers, useGroupInvites, useGenerateInvite } from '@/lib/hooks/use-groups'
+import { useMatches } from '@/lib/hooks/use-matches'
 import {
   SPORT_LABELS,
   ROLE_BADGE_VARIANT,
@@ -34,7 +35,10 @@ export default function GroupPage() {
   const { data: group, isLoading: loadingGroup, isError: errorGroup } = useGroup(id)
   const { data: members, isLoading: loadingMembers } = useGroupMembers(id)
   const { data: invites, isLoading: loadingInvites } = useGroupInvites(id)
+  const { data: upcomingMatches } = useMatches(id, 'upcoming')
   const generateInvite = useGenerateInvite(id)
+
+  const nextMatch = upcomingMatches?.[0] ?? null
 
   const canManage = group?.myRole === 'OWNER' || group?.myRole === 'ADMIN'
   const activeInvite = invites?.find(isInviteValid)
@@ -168,6 +172,75 @@ export default function GroupPage() {
             )}
           </div>
         )}
+
+        {/* Próxima partida */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-title text-arena-text">Próxima partida</h2>
+            <Link
+              href={`/groups/${id}/matches`}
+              className="text-sm text-arena-accent hover:underline flex items-center gap-0.5"
+            >
+              Ver todas
+              <ChevronRight className="size-4" />
+            </Link>
+          </div>
+
+          {nextMatch ? (
+            <Link
+              href={`/groups/${id}/matches/${nextMatch.id}`}
+              className="block rounded-card border border-arena-border bg-arena-surface p-4 hover:border-arena-accent/40 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <Badge variant={nextMatch.presenceListStatus === 'OPEN' ? 'success' : 'neutral'} className="mb-2">
+                    {nextMatch.presenceListStatus === 'OPEN' ? 'Lista aberta' : 'Lista fechada'}
+                  </Badge>
+                  <div className="flex items-center gap-1.5 text-sm text-arena-text mt-1">
+                    <Calendar className="size-3.5 shrink-0 text-arena-muted" />
+                    <span>
+                      {new Intl.DateTimeFormat('pt-BR', {
+                        weekday: 'short',
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }).format(new Date(nextMatch.scheduledAt))}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm text-arena-muted mt-0.5">
+                    <MapPin className="size-3.5 shrink-0" />
+                    <span className="truncate">{nextMatch.locationName}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <div className="flex items-center gap-1 text-sm">
+                    <Users className="size-4 text-arena-muted" />
+                    <span className="font-medium text-arena-text">{nextMatch.confirmedCount}</span>
+                    <span className="text-arena-muted">/ {nextMatch.maxPlayers}</span>
+                  </div>
+                  {nextMatch.waitingCount > 0 && (
+                    <span className="text-xs text-arena-accent">+{nextMatch.waitingCount} fila</span>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div className="rounded-card border border-arena-border bg-arena-surface p-4 flex items-center justify-between gap-3">
+              <p className="text-sm text-arena-muted">Nenhuma partida agendada.</p>
+              {canManage && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link href={`/groups/${id}/matches/new`} />}
+                >
+                  <Plus className="size-4" />
+                  Criar
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Seção de membros */}
         <div className="rounded-card border border-arena-border bg-arena-surface overflow-hidden">
