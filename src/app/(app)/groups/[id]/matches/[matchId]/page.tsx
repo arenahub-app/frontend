@@ -18,6 +18,7 @@ import {
   useAdminForcePresence,
   useAdminRemovePresence,
 } from '@/lib/hooks/use-matches'
+import { useCurrentFormation } from '@/lib/hooks/use-team-formations'
 import {
   MATCH_STATUS_LABELS,
   PRESENCE_LIST_STATUS_LABELS,
@@ -134,6 +135,50 @@ function WaitingEntryRow({ entry, canManage, onForce, onRemove, isActing }: Wait
       )}
     </div>
   )
+}
+
+interface TeamsCardProps {
+  groupId: string
+  matchId: string
+  canManage: boolean
+}
+
+function TeamsCard({ groupId, matchId, canManage }: TeamsCardProps) {
+  const { data: formation, isLoading, isError } = useCurrentFormation(groupId, matchId)
+
+  if (isLoading) {
+    return <Loader2 className="size-4 animate-spin text-arena-muted" />
+  }
+
+  if (formation) {
+    return (
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm text-arena-text">Times formados ✓</span>
+        <Link
+          href={`/groups/${groupId}/matches/${matchId}/teams`}
+          className="text-sm font-medium text-arena-accent hover:underline"
+        >
+          Ver Times →
+        </Link>
+      </div>
+    )
+  }
+
+  if (isError && canManage) {
+    return (
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm text-arena-muted">Lista encerrada. Pronto para formar times.</span>
+        <Link
+          href={`/groups/${groupId}/matches/${matchId}/teams`}
+          className="text-sm font-medium text-arena-accent hover:underline"
+        >
+          Formar Times →
+        </Link>
+      </div>
+    )
+  }
+
+  return null
 }
 
 export default function MatchDetailPage() {
@@ -539,6 +584,14 @@ export default function MatchDetailPage() {
               </>
             )}
           </section>
+
+          {/* Times */}
+          {match.presenceListStatus === 'CLOSED' && (
+            <section className="rounded-card border border-arena-border bg-arena-surface p-5">
+              <h2 className="font-display text-title text-arena-text mb-3">Times</h2>
+              <TeamsCard groupId={groupId} matchId={matchId} canManage={canManage} />
+            </section>
+          )}
 
         </div>
       </div>
