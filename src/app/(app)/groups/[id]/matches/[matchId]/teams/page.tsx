@@ -15,13 +15,7 @@ import {
 } from '@/lib/hooks/use-team-formations'
 import type { Team, TeamPlayer } from '@/lib/api/team-formations'
 import type { ApiError } from '@/lib/api/errors'
-
-const POSITION_LABELS: Record<string, string> = {
-  FORWARD: 'Atacante',
-  MIDFIELDER: 'Meia',
-  DEFENDER: 'Zagueiro',
-  GOALKEEPER: 'Goleiro',
-}
+import { POSITION_LABELS, type PlayerPosition } from '@/lib/api/groups'
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat('pt-BR', {
@@ -68,7 +62,7 @@ function PlayerRow({
   const movePlayer = useMovePlayer(groupId, matchId)
   const isOpen = openMoveId === player.memberId
   const displayName = player.userName ?? `Jogador ${player.memberId.slice(0, 8)}…`
-  const positionLabel = player.position ? POSITION_LABELS[player.position] : null
+  const positionLabel = player.position ? POSITION_LABELS[player.position as PlayerPosition] : null
 
   function handleConfirmMove() {
     if (!selectedTeamId) return

@@ -5,9 +5,11 @@ export type GroupRole = 'OWNER' | 'ADMIN' | 'PLAYER' | 'REFEREE'
 export type GroupStatus = 'ACTIVE' | 'INACTIVE'
 export type SkillSource = 'DEFAULT' | 'VOTING' | 'MANUAL'
 export type PlayerPosition =
-  | 'GOALKEEPER' | 'DEFENDER' | 'MIDFIELDER' | 'FORWARD'
-  | 'SETTER' | 'LIBERO' | 'OUTSIDE_HITTER' | 'OPPOSITE' | 'MIDDLE_BLOCKER'
+  | 'GOALKEEPER' | 'DEFENDER' | 'LATERAL' | 'MIDFIELDER' | 'FORWARD'
+  | 'SETTER' | 'WING_SPIKER' | 'MIDDLE_BLOCKER' | 'OPPOSITE' | 'LIBERO'
   | 'POINT_GUARD' | 'SHOOTING_GUARD' | 'SMALL_FORWARD' | 'POWER_FORWARD' | 'CENTER'
+  | 'ATTACKER_FV' | 'DEFENDER_FV'
+  | 'RIGHT_BT' | 'LEFT_BT'
   | 'OTHER'
 
 export const SPORT_LABELS: Record<Sport, string> = {
@@ -38,6 +40,38 @@ export const ROLE_ORDER: Record<GroupRole, number> = {
   ADMIN:   1,
   PLAYER:  2,
   REFEREE: 3,
+}
+
+export const POSITION_LABELS: Record<PlayerPosition, string> = {
+  GOALKEEPER:    'Goleiro',
+  DEFENDER:      'Zagueiro',
+  LATERAL:       'Lateral',
+  MIDFIELDER:    'Meia',
+  FORWARD:       'Atacante',
+  SETTER:        'Levantador',
+  WING_SPIKER:   'Ponta',
+  MIDDLE_BLOCKER:'Central',
+  OPPOSITE:      'Oposto',
+  LIBERO:        'Líbero',
+  POINT_GUARD:   'Armador',
+  SHOOTING_GUARD:'Ala Atirador',
+  SMALL_FORWARD: 'Ala',
+  POWER_FORWARD: 'Ala Pivô',
+  CENTER:        'Pivô',
+  ATTACKER_FV:   'Atacante',
+  DEFENDER_FV:   'Defensor',
+  RIGHT_BT:      'Direita',
+  LEFT_BT:       'Esquerda',
+  OTHER:         'Outro',
+}
+
+export const POSITIONS_BY_SPORT: Record<Sport, PlayerPosition[]> = {
+  FOOTBALL:     ['GOALKEEPER', 'DEFENDER', 'LATERAL', 'MIDFIELDER', 'FORWARD'],
+  VOLLEYBALL:   ['SETTER', 'WING_SPIKER', 'MIDDLE_BLOCKER', 'OPPOSITE', 'LIBERO'],
+  BASKETBALL:   ['POINT_GUARD', 'SHOOTING_GUARD', 'SMALL_FORWARD', 'POWER_FORWARD', 'CENTER'],
+  FUTEVOLEI:    ['ATTACKER_FV', 'DEFENDER_FV'],
+  BEACH_TENNIS: ['RIGHT_BT', 'LEFT_BT'],
+  OTHER:        ['OTHER'],
 }
 
 export interface GroupSummary {
