@@ -43,7 +43,11 @@ export function RegisterForm() {
       }),
     onSuccess: (data) => {
       signIn(data)
-      toast.success('Conta criada! Verifique seu email para ativar sua conta.')
+      if (data.emailVerificationRequired) {
+        toast.success('Conta criada! Verifique seu email para ativar sua conta.')
+      } else {
+        toast.success('Conta criada com sucesso!')
+      }
       router.push('/dashboard')
     },
     onError: (error: ApiError) => {
