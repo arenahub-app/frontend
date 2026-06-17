@@ -116,11 +116,11 @@ export const matchesApi = {
     apiClient.patch<Match>(`/groups/${groupId}/matches/${matchId}`, data).then((r) => r.data),
 
   cancel: (groupId: string, matchId: string) =>
-    apiClient.delete(`/groups/${groupId}/matches/${matchId}`).then((r) => r.data),
+    apiClient.post<void>(`/groups/${groupId}/matches/${matchId}/cancel`).then((r) => r.data),
 
   closePresenceList: (groupId: string, matchId: string) =>
     apiClient
-      .post<void>(`/groups/${groupId}/matches/${matchId}/close-presence-list`)
+      .post<void>(`/groups/${groupId}/matches/${matchId}/close-list`)
       .then((r) => r.data),
 
   getPresenceList: (groupId: string, matchId: string) =>

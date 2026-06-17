@@ -5,18 +5,21 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Settings, Link2, Copy, Check, Plus, Loader2, Users, Calendar, MapPin, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
-import { Badge, Button } from '@/components/ui'
-import { useGroup, useGroupMembers, useGroupInvites, useGenerateInvite } from '@/lib/hooks/use-groups'
+import { Badge, Button, Select } from '@/components/ui'
+import { useGroup, useGroupMembers, useGroupInvites, useGenerateInvite, useUpdateMember } from '@/lib/hooks/use-groups'
 import { useMatches } from '@/lib/hooks/use-matches'
 import {
   SPORT_LABELS,
   ROLE_BADGE_VARIANT,
   ROLE_LABELS,
   ROLE_ORDER,
+  POSITION_LABELS,
+  POSITIONS_BY_SPORT,
   buildInviteLink,
   isInviteValid,
 } from '@/lib/api/groups'
-import type { Member } from '@/lib/api/groups'
+import type { Member, PlayerPosition } from '@/lib/api/groups'
+import { getCurrentUserId } from '@/lib/api/token'
 import type { ApiError } from '@/lib/api/errors'
 
 function sortMembers(members: Member[]): Member[] {
@@ -42,6 +45,8 @@ export default function GroupPage() {
 
   const canManage = group?.myRole === 'OWNER' || group?.myRole === 'ADMIN'
   const activeInvite = invites?.find(isInviteValid)
+  const myUserId = getCurrentUserId()
+  const updateMember = useUpdateMember(id)
 
   async function handleCopyInvite(token: string) {
     await navigator.clipboard.writeText(buildInviteLink(token))
@@ -277,14 +282,37 @@ export default function GroupPage() {
                       <span className="text-sm text-arena-accent font-medium">
                         ★ {Number(member.skill).toFixed(1)}
                       </span>
-                      {member.position && (
-                        <span className="text-caption text-arena-muted">{member.position}</span>
+                      {member.position && !canManage && member.userId !== myUserId && (
+                        <span className="text-caption text-arena-muted">
+                          {POSITION_LABELS[member.position] ?? member.position}
+                        </span>
                       )}
                     </div>
                     <p className="mt-1 text-sm font-medium text-arena-text truncate">
                       {member.userName ?? `ID: ${member.userId.slice(0, 12)}…`}
                     </p>
                   </div>
+                  {(canManage || member.userId === myUserId) && group && (
+                    <Select
+                      value={member.position ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value as PlayerPosition | ''
+                        updateMember.mutate(
+                          { memberId: member.id, data: { position: val || null } },
+                          {
+                            onSuccess: () => toast.success('Posição atualizada.'),
+                            onError: () => toast.error('Erro ao atualizar posição.'),
+                          }
+                        )
+                      }}
+                      className="w-36 h-9 text-sm shrink-0"
+                    >
+                      <option value="">Posição...</option>
+                      {POSITIONS_BY_SPORT[group.sport].map((pos) => (
+                        <option key={pos} value={pos}>{POSITION_LABELS[pos]}</option>
+                      ))}
+                    </Select>
+                  )}
                 </div>
               ))}
             </div>
