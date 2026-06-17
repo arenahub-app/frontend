@@ -3,6 +3,7 @@ import { apiClient } from './client'
 export interface AuthResponse {
   accessToken: string
   expiresIn: number
+  emailVerificationRequired?: boolean
 }
 
 export interface RegisterPayload {
