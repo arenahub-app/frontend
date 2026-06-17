@@ -75,6 +75,7 @@ interface PresenceEntryRowProps {
 function PresenceEntryRow({ entry, canManage, charge, onRemove, isRemoving }: PresenceEntryRowProps) {
   const [confirming, setConfirming] = useState(false)
   const isBanned = entry.status === 'BANNED_PENDING'
+  const isPaymentPending = entry.status === 'PAYMENT_PENDING'
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
@@ -84,6 +85,7 @@ function PresenceEntryRow({ entry, canManage, charge, onRemove, isRemoving }: Pr
             {entry.userName ?? `Membro ${entry.memberId.slice(0, 8)}…`}
           </span>
           {isBanned && <Badge variant="danger">Banido</Badge>}
+          {isPaymentPending && <Badge variant="warning">Aguard. pagamento</Badge>}
         </div>
         {entry.skill != null && (
           <span className="text-xs text-arena-accent">★ {Number(entry.skill).toFixed(1)}</span>
@@ -366,6 +368,12 @@ export default function MatchDetailPage() {
 
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [showReceiptModal, setShowReceiptModal] = useState(false)
+  const [receiptCharge, setReceiptCharge] = useState<{ chargeId: string; amount: number } | null>(null)
+
+  function openReceiptModal(chargeId: string, amount: number) {
+    setReceiptCharge({ chargeId, amount })
+    setShowReceiptModal(true)
+  }
 
   if (loadingMatch) {
     return (
@@ -398,9 +406,7 @@ export default function MatchDetailPage() {
         } else if (result.presenceEntry?.status === 'BANNED_PENDING') {
           toast.warning('Você está banido. Sua presença ficará pendente de revisão.')
         } else if (result.pendingCharge) {
-          toast.success(
-            `Presença confirmada! Você tem uma cobrança de ${formatCurrency(result.pendingCharge.amount)} pendente.`,
-          )
+          openReceiptModal(result.pendingCharge.chargeId, result.pendingCharge.amount)
         } else {
           toast.success('Presença confirmada!')
         }
@@ -551,7 +557,7 @@ export default function MatchDetailPage() {
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => setShowReceiptModal(true)}
+                    onClick={() => openReceiptModal(myMatchCharge.chargeId, myMatchCharge.amount)}
                   >
                     Enviar comprovante
                   </Button>
@@ -628,6 +634,30 @@ export default function MatchDetailPage() {
                   <span className="text-sm text-arena-danger">
                     Presença pendente — você está banido de partidas deste grupo.
                   </span>
+                </div>
+              )}
+
+              {myStatus === 'PAYMENT_PENDING' && (
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-yellow-500" />
+                    <span className="text-sm text-arena-text">Aguardando pagamento</span>
+                  </div>
+                  {myMatchCharge && (
+                    myMatchCharge.latestAttemptStatus !== null ? (
+                      <span className="text-xs text-arena-muted">
+                        Comprovante enviado · aguardando revisão
+                      </span>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => openReceiptModal(myMatchCharge.chargeId, myMatchCharge.amount)}
+                      >
+                        Enviar comprovante
+                      </Button>
+                    )
+                  )}
                 </div>
               )}
 
@@ -810,11 +840,11 @@ export default function MatchDetailPage() {
       </div>
 
       {/* Modal de comprovante */}
-      {showReceiptModal && myMatchCharge && (
+      {showReceiptModal && receiptCharge && (
         <ReceiptModal
           groupId={groupId}
-          chargeId={myMatchCharge.chargeId}
-          amount={myMatchCharge.amount}
+          chargeId={receiptCharge.chargeId}
+          amount={receiptCharge.amount}
           pixKey={group?.pixKey ?? null}
           onClose={() => setShowReceiptModal(false)}
         />

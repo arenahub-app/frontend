@@ -4,7 +4,7 @@ import type { PendingCharge } from './payments'
 
 export type MatchStatus = 'SCHEDULED' | 'CANCELLED'
 export type PresenceListStatus = 'OPEN' | 'CLOSED'
-export type PresenceStatus = 'CONFIRMED' | 'DECLINED' | 'BANNED_PENDING'
+export type PresenceStatus = 'CONFIRMED' | 'DECLINED' | 'BANNED_PENDING' | 'PAYMENT_PENDING'
 
 export const MATCH_STATUS_LABELS: Record<MatchStatus, string> = {
   SCHEDULED: 'Agendada',
@@ -20,6 +20,7 @@ export const PRESENCE_STATUS_LABELS: Record<string, string> = {
   CONFIRMED: 'Confirmado',
   DECLINED: 'Recusou',
   BANNED_PENDING: 'Banido (pendente)',
+  PAYMENT_PENDING: 'Aguardando pagamento',
   WAITING: 'Na fila',
 }
 
