@@ -120,7 +120,7 @@ export const matchesApi = {
 
   closePresenceList: (groupId: string, matchId: string) =>
     apiClient
-      .post<void>(`/groups/${groupId}/matches/${matchId}/close-presence-list`)
+      .post<void>(`/groups/${groupId}/matches/${matchId}/close-list`)
       .then((r) => r.data),
 
   getPresenceList: (groupId: string, matchId: string) =>
