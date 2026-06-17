@@ -91,6 +91,7 @@ export interface Group {
   description: string | null
   photoUrl: string | null
   pixKey: string | null
+  matchFee: number | null
   status: GroupStatus
   memberCount: number
   myRole: GroupRole
@@ -148,6 +149,7 @@ export interface UpdateGroupPayload {
   sport?: Sport
   description?: string
   pixKey?: string
+  matchFee?: number | null
 }
 
 export interface UpdateMemberPayload {

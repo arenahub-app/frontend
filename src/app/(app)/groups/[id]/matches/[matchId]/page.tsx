@@ -1,9 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, MapPin, Users, Clock, Loader2, UserCheck, UserX, ShieldBan } from 'lucide-react'
+import {
+  ArrowLeft, Calendar, MapPin, Users, Clock, Loader2,
+  UserCheck, UserX, ShieldBan, Upload, X, Copy,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge, Button } from '@/components/ui'
 import { useGroup } from '@/lib/hooks/use-groups'
@@ -19,12 +22,14 @@ import {
   useAdminRemovePresence,
 } from '@/lib/hooks/use-matches'
 import { useCurrentFormation } from '@/lib/hooks/use-team-formations'
+import { useMyCharges, useMatchCharges, useSubmitReceipt } from '@/lib/hooks/use-payments'
 import {
   MATCH_STATUS_LABELS,
   PRESENCE_LIST_STATUS_LABELS,
   type PresenceEntry,
   type WaitingEntry,
 } from '@/lib/api/matches'
+import { CHARGE_STATUS_LABELS, type ChargeResponse } from '@/lib/api/payments'
 import type { ApiError } from '@/lib/api/errors'
 
 function formatDate(iso: string) {
@@ -42,18 +47,32 @@ function formatTime(iso: string) {
   )
 }
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+}
+
 function apiErr(error: unknown): string {
   return (error as ApiError).response?.data?.detail ?? 'Erro inesperado.'
 }
 
+const CHARGE_STATUS_VARIANT = {
+  PENDING:  'warning',
+  APPROVED: 'success',
+  REJECTED: 'danger',
+} as const
+
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'application/pdf']
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+
 interface PresenceEntryRowProps {
   entry: PresenceEntry
   canManage: boolean
+  charge?: ChargeResponse
   onRemove?: (memberId: string) => void
   isRemoving?: boolean
 }
 
-function PresenceEntryRow({ entry, canManage, onRemove, isRemoving }: PresenceEntryRowProps) {
+function PresenceEntryRow({ entry, canManage, charge, onRemove, isRemoving }: PresenceEntryRowProps) {
   const [confirming, setConfirming] = useState(false)
   const isBanned = entry.status === 'BANNED_PENDING'
 
@@ -64,14 +83,19 @@ function PresenceEntryRow({ entry, canManage, onRemove, isRemoving }: PresenceEn
           <span className="text-sm font-medium text-arena-text truncate">
             {entry.userName ?? `Membro ${entry.memberId.slice(0, 8)}…`}
           </span>
-          {isBanned && (
-            <Badge variant="danger">Banido</Badge>
-          )}
+          {isBanned && <Badge variant="danger">Banido</Badge>}
         </div>
         {entry.skill != null && (
           <span className="text-xs text-arena-accent">★ {Number(entry.skill).toFixed(1)}</span>
         )}
       </div>
+
+      {charge && (
+        <Badge variant={CHARGE_STATUS_VARIANT[charge.status]}>
+          {CHARGE_STATUS_LABELS[charge.status]}
+        </Badge>
+      )}
+
       {canManage && onRemove && (
         <>
           {confirming ? (
@@ -181,6 +205,139 @@ function TeamsCard({ groupId, matchId, canManage }: TeamsCardProps) {
   return null
 }
 
+interface ReceiptModalProps {
+  groupId: string
+  chargeId: string
+  amount: number
+  pixKey: string | null
+  onClose: () => void
+}
+
+function ReceiptModal({ groupId, chargeId, amount, pixKey, onClose }: ReceiptModalProps) {
+  const [file, setFile] = useState<File | null>(null)
+  const [dragOver, setDragOver] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const submit = useSubmitReceipt(groupId, chargeId)
+
+  function pickFile(f: File) {
+    if (!ALLOWED_MIME.includes(f.type)) {
+      toast.error('Formato inválido. Use PNG, JPG ou PDF.')
+      return
+    }
+    if (f.size > MAX_FILE_SIZE) {
+      toast.error('Arquivo muito grande. Máximo 10 MB.')
+      return
+    }
+    setFile(f)
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragOver(false)
+    const f = e.dataTransfer.files[0]
+    if (f) pickFile(f)
+  }
+
+  function handleSend() {
+    if (!file) return
+    submit.mutate(file, {
+      onSuccess: () => {
+        toast.success('Comprovante enviado! Aguardando confirmação do administrador.')
+        onClose()
+      },
+      onError: (error) => toast.error(apiErr(error)),
+    })
+  }
+
+  async function copyPix() {
+    if (!pixKey) return
+    await navigator.clipboard.writeText(pixKey)
+    toast.success('Chave Pix copiada!')
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-4 pb-4 sm:pb-0">
+      <div className="w-full max-w-md rounded-card bg-arena-surface border border-arena-border shadow-xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-arena-border">
+          <h3 className="font-display text-title text-arena-text">Enviar comprovante</h3>
+          <button onClick={onClose} className="text-arena-muted hover:text-arena-text">
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <div className="p-5 flex flex-col gap-4">
+          {/* Pix info */}
+          <div className="rounded-lg border border-arena-border bg-arena-raised p-4 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-caption text-arena-muted">Valor a pagar</span>
+              <span className="font-display text-title text-arena-text">{formatCurrency(amount)}</span>
+            </div>
+            {pixKey && (
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="text-caption text-arena-muted block">Chave Pix</span>
+                  <span className="text-sm text-arena-text font-mono truncate block">{pixKey}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={copyPix}>
+                  <Copy className="size-3.5" />
+                  Copiar
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Upload area */}
+          <div
+            className={`rounded-lg border-2 border-dashed p-6 flex flex-col items-center gap-3 cursor-pointer transition-colors ${
+              dragOver ? 'border-arena-accent bg-arena-accent/5' : 'border-arena-border hover:border-arena-accent/40'
+            }`}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => inputRef.current?.click()}
+          >
+            <Upload className="size-6 text-arena-muted" />
+            {file ? (
+              <div className="text-center">
+                <p className="text-sm font-medium text-arena-text">{file.name}</p>
+                <p className="text-xs text-arena-muted">{(file.size / 1024).toFixed(0)} KB</p>
+              </div>
+            ) : (
+              <div className="text-center">
+                <p className="text-sm text-arena-text">Arraste ou clique para selecionar</p>
+                <p className="text-xs text-arena-muted">PNG, JPG ou PDF · máx. 10 MB</p>
+              </div>
+            )}
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/jpeg,image/png,application/pdf"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) pickFile(f) }}
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="ghost" size="md" className="flex-1" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              className="flex-1"
+              disabled={!file}
+              loading={submit.isPending}
+              onClick={handleSend}
+            >
+              Enviar comprovante
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function MatchDetailPage() {
   const { id: groupId, matchId } = useParams<{ id: string; matchId: string }>()
   const router = useRouter()
@@ -188,6 +345,16 @@ export default function MatchDetailPage() {
   const { data: group } = useGroup(groupId)
   const { data: match, isLoading: loadingMatch } = useMatch(groupId, matchId)
   const { data: presenceList, isLoading: loadingPresence } = usePresenceList(groupId, matchId)
+
+  const canManage = group?.myRole === 'OWNER' || group?.myRole === 'ADMIN'
+  const isReferee = group?.myRole === 'REFEREE'
+  const groupHasFee = (group?.matchFee ?? 0) > 0
+
+  const { data: myCharges } = useMyCharges(groupId)
+  const { data: matchCharges } = useMatchCharges(groupId, matchId, canManage && groupHasFee)
+
+  const myMatchCharge = myCharges?.find((c) => c.referenceMatchId === matchId) ?? null
+  const chargeByMember = new Map(matchCharges?.map((c) => [c.memberId, c]) ?? [])
 
   const confirmPresence = useConfirmPresence(groupId, matchId)
   const declinePresence = useDeclinePresence(groupId, matchId)
@@ -198,9 +365,7 @@ export default function MatchDetailPage() {
   const adminRemove = useAdminRemovePresence(groupId, matchId)
 
   const [confirmCancel, setConfirmCancel] = useState(false)
-
-  const canManage = group?.myRole === 'OWNER' || group?.myRole === 'ADMIN'
-  const isReferee = group?.myRole === 'REFEREE'
+  const [showReceiptModal, setShowReceiptModal] = useState(false)
 
   if (loadingMatch) {
     return (
@@ -232,6 +397,10 @@ export default function MatchDetailPage() {
           toast.success(`Você entrou na fila — posição ${result.waitingEntry?.queuePosition}.`)
         } else if (result.presenceEntry?.status === 'BANNED_PENDING') {
           toast.warning('Você está banido. Sua presença ficará pendente de revisão.')
+        } else if (result.pendingCharge) {
+          toast.success(
+            `Presença confirmada! Você tem uma cobrança de ${formatCurrency(result.pendingCharge.amount)} pendente.`,
+          )
         } else {
           toast.success('Presença confirmada!')
         }
@@ -290,6 +459,14 @@ export default function MatchDetailPage() {
 
   const presenceActionPending =
     confirmPresence.isPending || declinePresence.isPending || cancelPresence.isPending
+
+  const showChargeCard =
+    !canManage &&
+    !isReferee &&
+    myMatchCharge !== null &&
+    myMatchCharge?.status === 'PENDING'
+
+  const hasPendingAttempt = myMatchCharge?.latestAttemptStatus === null && myMatchCharge.status === 'PENDING'
 
   return (
     <div className="min-h-screen bg-arena-bg px-4 py-8 md:px-8 lg:px-12">
@@ -350,6 +527,38 @@ export default function MatchDetailPage() {
               </div>
             </div>
           </section>
+
+          {/* Card de cobrança pendente (jogador) */}
+          {showChargeCard && myMatchCharge && (
+            <section className="rounded-card border border-arena-warning/30 bg-arena-warning/5 p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-arena-text mb-0.5">
+                    Pagamento pendente · {formatCurrency(myMatchCharge.amount)}
+                  </p>
+                  {group?.pixKey && (
+                    <p className="text-xs text-arena-muted">
+                      Pix: <span className="font-mono">{group.pixKey}</span>
+                    </p>
+                  )}
+                  {myMatchCharge.latestAttemptStatus !== null && (
+                    <p className="text-xs text-arena-muted mt-1">
+                      Comprovante enviado · aguardando revisão do administrador.
+                    </p>
+                  )}
+                </div>
+                {!hasPendingAttempt && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setShowReceiptModal(true)}
+                  >
+                    Enviar comprovante
+                  </Button>
+                )}
+              </div>
+            </section>
+          )}
 
           {/* Minha presença */}
           {isScheduled && !isReferee && (
@@ -510,10 +719,13 @@ export default function MatchDetailPage() {
               <>
                 {/* Confirmados */}
                 <div>
-                  <div className="px-4 py-2 bg-arena-raised border-b border-arena-border">
+                  <div className="px-4 py-2 bg-arena-raised border-b border-arena-border flex items-center gap-2">
                     <span className="text-xs font-semibold uppercase tracking-wide text-arena-muted">
                       Confirmados ({presenceList.confirmed.length}/{match.maxPlayers})
                     </span>
+                    {canManage && groupHasFee && (
+                      <span className="text-xs text-arena-muted">· Pagamento</span>
+                    )}
                   </div>
                   {presenceList.confirmed.length === 0 ? (
                     <p className="px-4 py-4 text-sm text-arena-muted">Nenhum confirmado ainda.</p>
@@ -524,6 +736,7 @@ export default function MatchDetailPage() {
                           key={entry.id}
                           entry={entry}
                           canManage={canManage}
+                          charge={canManage && groupHasFee ? chargeByMember.get(entry.memberId) : undefined}
                           onRemove={canManage ? handleRemovePresence : undefined}
                           isRemoving={adminRemove.isPending}
                         />
@@ -595,6 +808,17 @@ export default function MatchDetailPage() {
 
         </div>
       </div>
+
+      {/* Modal de comprovante */}
+      {showReceiptModal && myMatchCharge && (
+        <ReceiptModal
+          groupId={groupId}
+          chargeId={myMatchCharge.chargeId}
+          amount={myMatchCharge.amount}
+          pixKey={group?.pixKey ?? null}
+          onClose={() => setShowReceiptModal(false)}
+        />
+      )}
     </div>
   )
 }

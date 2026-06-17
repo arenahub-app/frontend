@@ -1,5 +1,6 @@
 import { apiClient } from './client'
 import type { PlayerPosition } from './groups'
+import type { PendingCharge } from './payments'
 
 export type MatchStatus = 'SCHEDULED' | 'CANCELLED'
 export type PresenceListStatus = 'OPEN' | 'CLOSED'
@@ -84,6 +85,7 @@ export interface PresenceActionResult {
   type: 'PRESENCE' | 'WAITING' | 'DECLINED'
   presenceEntry: PresenceEntry | null
   waitingEntry: WaitingEntry | null
+  pendingCharge: PendingCharge | null
 }
 
 export interface CreateMatchPayload {
