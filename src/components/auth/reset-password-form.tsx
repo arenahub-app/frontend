@@ -78,8 +78,12 @@ export function ResetPasswordForm({ token }: Props) {
               autoComplete="new-password"
               {...register('newPassword')}
             />
-            {errors.newPassword && (
+            {errors.newPassword ? (
               <p className="text-xs text-arena-danger">{errors.newPassword.message}</p>
+            ) : (
+              <p className="text-xs text-arena-muted">
+                Mínimo 8 caracteres · maiúscula · minúscula · número · caractere especial (!@#$%…)
+              </p>
             )}
           </div>
 

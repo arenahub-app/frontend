@@ -11,9 +11,11 @@ export const registerSchema = z
     email: z.string().email('Email inválido'),
     password: z
       .string()
-      .min(8, 'Senha deve ter pelo menos 8 caracteres')
+      .min(8, 'Mínimo de 8 caracteres')
+      .regex(/[a-z]/, 'Deve conter pelo menos uma letra minúscula')
       .regex(/[A-Z]/, 'Deve conter pelo menos uma letra maiúscula')
-      .regex(/[0-9]/, 'Deve conter pelo menos um número'),
+      .regex(/[0-9]/, 'Deve conter pelo menos um número')
+      .regex(/[^a-zA-Z0-9]/, 'Deve conter pelo menos um caractere especial (ex: !@#$%)'),
     confirmPassword: z.string(),
     phone: z
       .string()
@@ -33,9 +35,11 @@ export const resetPasswordSchema = z
   .object({
     newPassword: z
       .string()
-      .min(8, 'Senha deve ter pelo menos 8 caracteres')
+      .min(8, 'Mínimo de 8 caracteres')
+      .regex(/[a-z]/, 'Deve conter pelo menos uma letra minúscula')
       .regex(/[A-Z]/, 'Deve conter pelo menos uma letra maiúscula')
-      .regex(/[0-9]/, 'Deve conter pelo menos um número'),
+      .regex(/[0-9]/, 'Deve conter pelo menos um número')
+      .regex(/[^a-zA-Z0-9]/, 'Deve conter pelo menos um caractere especial (ex: !@#$%)'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
