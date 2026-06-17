@@ -269,10 +269,6 @@ export default function TeamsPage() {
     )
   }
 
-  const skills = formation?.teams.map((t) => t.averageSkill) ?? []
-  const isImbalanced =
-    skills.length >= 2 && Math.max(...skills) - Math.min(...skills) > 0.5
-
   return (
     <div className="min-h-screen bg-arena-bg px-4 py-8 md:px-8 lg:px-12">
       <div className="mx-auto max-w-4xl">
@@ -344,9 +340,6 @@ export default function TeamsPage() {
                     ? 'Geração automática'
                     : 'Ajustado manualmente'}
                 </Badge>
-                {isImbalanced && (
-                  <Badge variant="warning">⚠ Times desequilibrados</Badge>
-                )}
                 <span className="text-xs text-arena-muted ml-auto">
                   Confirmado em {formatDate(formation.confirmedAt)}{' '}
                   {formatTime(formation.confirmedAt)}
