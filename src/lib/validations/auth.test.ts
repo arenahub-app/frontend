@@ -53,6 +53,18 @@ describe('registerSchema', () => {
     ).toBe(false)
   })
 
+  it('rejects password without lowercase letter', () => {
+    expect(
+      registerSchema.safeParse({ ...valid, password: 'SENHA@123', confirmPassword: 'SENHA@123' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects password without special character', () => {
+    expect(
+      registerSchema.safeParse({ ...valid, password: 'SenhaABC123', confirmPassword: 'SenhaABC123' }).success,
+    ).toBe(false)
+  })
+
   it('rejects password shorter than 8 chars', () => {
     expect(
       registerSchema.safeParse({ ...valid, password: 'Ab1', confirmPassword: 'Ab1' }).success,

@@ -129,8 +129,12 @@ export function RegisterForm() {
               autoComplete="new-password"
               {...register('password')}
             />
-            {errors.password && (
+            {errors.password ? (
               <p className="text-xs text-arena-danger">{errors.password.message}</p>
+            ) : (
+              <p className="text-xs text-arena-muted">
+                Mínimo 8 caracteres · maiúscula · minúscula · número · caractere especial (!@#$%…)
+              </p>
             )}
           </div>
 
