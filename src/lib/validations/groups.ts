@@ -19,6 +19,7 @@ export const updateGroupSchema = z.object({
     .optional(),
   description: z.string().max(500, 'Descrição deve ter no máximo 500 caracteres').optional(),
   pixKey: z.string().optional(),
+  matchFee: z.string().optional(),
 })
 
 export type CreateGroupInput = z.infer<typeof createGroupSchema>

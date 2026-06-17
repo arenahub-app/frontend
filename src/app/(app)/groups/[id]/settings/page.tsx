@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Copy, Trash2, Plus, Loader2 } from 'lucide-react'
+import { ArrowLeft, Copy, Trash2, Plus, Loader2, CreditCard } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -64,7 +64,12 @@ export default function GroupSettingsPage() {
   } = useForm<UpdateGroupInput>({
     resolver: zodResolver(updateGroupSchema),
     values: group
-      ? { name: group.name, description: group.description ?? '', pixKey: group.pixKey ?? '' }
+      ? {
+          name: group.name,
+          description: group.description ?? '',
+          pixKey: group.pixKey ?? '',
+          matchFee: group.matchFee != null ? String(group.matchFee) : '',
+        }
       : undefined,
   })
 
@@ -100,7 +105,19 @@ export default function GroupSettingsPage() {
   }
 
   function onSaveGroup(data: UpdateGroupInput) {
-    updateGroup.mutate(data, {
+    const matchFeeRaw = data.matchFee
+    let matchFee: number | null | undefined = undefined
+    if (matchFeeRaw === '' || matchFeeRaw === undefined) {
+      matchFee = null
+    } else {
+      const parsed = parseFloat(matchFeeRaw)
+      if (isNaN(parsed) || parsed <= 0) {
+        toast.error('Valor da diária deve ser maior que zero.')
+        return
+      }
+      matchFee = parsed
+    }
+    updateGroup.mutate({ ...data, matchFee }, {
       onSuccess: () => toast.success('Grupo atualizado!'),
       onError: (error) => toast.error(apiErr(error) ?? 'Erro ao salvar alterações.'),
     })
@@ -217,6 +234,24 @@ export default function GroupSettingsPage() {
                   <Input id="pixKey" placeholder="email@pix.com ou CPF" {...register('pixKey')} />
                 </div>
 
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="matchFee">Valor da diária (R$)</Label>
+                  <Input
+                    id="matchFee"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Ex: 25,00 (vazio = sem cobrança)"
+                    {...register('matchFee')}
+                  />
+                  {errors.matchFee?.message && (
+                    <p className="text-xs text-arena-danger">{errors.matchFee.message as string}</p>
+                  )}
+                  <p className="text-xs text-arena-muted">
+                    Deixe vazio para desabilitar a cobrança automática.
+                  </p>
+                </div>
+
                 <Button
                   type="submit"
                   variant="primary"
@@ -226,6 +261,23 @@ export default function GroupSettingsPage() {
                   Salvar alterações
                 </Button>
               </form>
+            </section>
+
+            {/* Seção: Pagamentos (OWNER e ADMIN) */}
+            <section className="rounded-card border border-arena-border bg-arena-surface p-5">
+              <h2 className="font-display text-title text-arena-text mb-2">Pagamentos</h2>
+              <p className="text-caption text-arena-muted mb-4">
+                Revise comprovantes, aprove ou recuse pagamentos dos membros.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                render={<Link href={`/groups/${id}/admin/payments`} />}
+              >
+                <CreditCard className="size-4" />
+                Fila de pagamentos
+              </Button>
             </section>
 
             {/* Seção: Danger Zone (apenas OWNER) */}
