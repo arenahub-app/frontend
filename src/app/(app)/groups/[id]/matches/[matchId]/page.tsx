@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Calendar, MapPin, Users, Clock, Loader2,
-  UserCheck, UserX, ShieldBan, Upload, X, Copy,
+  UserCheck, UserX, ShieldBan, Upload, X, Copy, Share2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge, Button } from '@/components/ui'
@@ -49,6 +49,47 @@ function formatTime(iso: string) {
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+}
+
+function buildWhatsAppText(
+  match: import('@/lib/api/matches').Match,
+  groupName: string | undefined,
+  matchFee: number | null | undefined,
+  pixKey: string | null | undefined,
+  confirmed: import('@/lib/api/matches').PresenceEntry[],
+): string {
+  const available = match.maxPlayers - match.confirmedCount
+  const lines: string[] = []
+
+  if (groupName) lines.push(`*${groupName}*`)
+  lines.push(`Partida — ${formatDate(match.scheduledAt)} às ${formatTime(match.scheduledAt)}`)
+  lines.push('')
+  lines.push(`Local: ${match.locationName}`)
+  if (match.locationAddress) lines.push(match.locationAddress)
+
+  if (matchFee && matchFee > 0) {
+    lines.push(`Valor: ${formatCurrency(matchFee)}`)
+    if (pixKey) lines.push(`Pix: ${pixKey}`)
+  }
+
+  lines.push('')
+  lines.push(
+    `Confirmados: ${match.confirmedCount}/${match.maxPlayers} — ${available} vaga${available !== 1 ? 's' : ''} disponível`,
+  )
+
+  if (confirmed.length > 0) {
+    lines.push('')
+    confirmed.forEach((entry, i) => {
+      lines.push(`${i + 1}. ${entry.userName ?? `Jogador ${i + 1}`}`)
+    })
+  }
+
+  if (match.waitingCount > 0) {
+    lines.push('')
+    lines.push(`Fila de espera: ${match.waitingCount} pessoa${match.waitingCount !== 1 ? 's' : ''}`)
+  }
+
+  return lines.join('\n')
 }
 
 function apiErr(error: unknown): string {
@@ -463,6 +504,18 @@ export default function MatchDetailPage() {
     })
   }
 
+  function handleShare() {
+    if (!match) return
+    const text = buildWhatsAppText(
+      match,
+      group?.name,
+      group?.matchFee,
+      group?.pixKey,
+      presenceList?.confirmed ?? [],
+    )
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+  }
+
   const presenceActionPending =
     confirmPresence.isPending || declinePresence.isPending || cancelPresence.isPending
 
@@ -531,6 +584,13 @@ export default function MatchDetailPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="mt-4 flex justify-end">
+              <Button variant="ghost" size="sm" onClick={handleShare}>
+                <Share2 className="size-3.5" />
+                Compartilhar
+              </Button>
             </div>
           </section>
 
