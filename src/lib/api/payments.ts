@@ -19,8 +19,10 @@ export interface PendingCharge {
 
 export interface ChargeResponse {
   chargeId: string
-  memberId: string
+  memberId: string | null
   memberName: string | null
+  guestId: string | null
+  guestName: string | null
   type: ChargeType
   amount: number
   referenceMatchId: string | null

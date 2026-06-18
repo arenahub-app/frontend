@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Calendar, MapPin, Users, Clock, Loader2,
-  UserCheck, UserX, ShieldBan, Upload, X, Copy, Share2,
+  UserCheck, UserX, ShieldBan, Upload, X, Copy, Share2, UserPlus,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge, Button } from '@/components/ui'
@@ -20,16 +20,20 @@ import {
   useClosePresenceList,
   useAdminForcePresence,
   useAdminRemovePresence,
+  useAddGuest,
+  useRemoveGuest,
 } from '@/lib/hooks/use-matches'
 import { useCurrentFormation } from '@/lib/hooks/use-team-formations'
 import { useMyCharges, useMatchCharges, useSubmitReceipt } from '@/lib/hooks/use-payments'
 import {
   MATCH_STATUS_LABELS,
   PRESENCE_LIST_STATUS_LABELS,
+  type AddGuestPayload,
   type PresenceEntry,
   type WaitingEntry,
 } from '@/lib/api/matches'
 import { CHARGE_STATUS_LABELS, type ChargeResponse } from '@/lib/api/payments'
+import { POSITION_LABELS, POSITIONS_BY_SPORT, type PlayerPosition } from '@/lib/api/groups'
 import type { ApiError } from '@/lib/api/errors'
 
 function formatDate(iso: string) {
@@ -87,7 +91,8 @@ function buildWhatsAppText(
     lines.push('')
     if (pendentes.length > 0) lines.push('✅ *Pagamento confirmado*')
     pagos.forEach((entry, i) => {
-      lines.push(`${i + 1}. ${entry.userName ?? `Jogador ${i + 1}`}`)
+      const label = entry.type === 'GUEST' ? `${entry.userName} (conv.)` : (entry.userName ?? `Jogador ${i + 1}`)
+      lines.push(`${i + 1}. ${label}`)
     })
   }
 
@@ -124,7 +129,7 @@ interface PresenceEntryRowProps {
   entry: PresenceEntry
   canManage: boolean
   charge?: ChargeResponse
-  onRemove?: (memberId: string) => void
+  onRemove?: () => void
   isRemoving?: boolean
 }
 
@@ -132,14 +137,16 @@ function PresenceEntryRow({ entry, canManage, charge, onRemove, isRemoving }: Pr
   const [confirming, setConfirming] = useState(false)
   const isBanned = entry.status === 'BANNED_PENDING'
   const isPaymentPending = entry.status === 'PAYMENT_PENDING'
+  const isGuest = entry.type === 'GUEST'
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium text-arena-text truncate">
-            {entry.userName ?? `Membro ${entry.memberId.slice(0, 8)}…`}
+            {entry.userName ?? (isGuest ? 'Convidado' : `Membro ${entry.memberId?.slice(0, 8)}…`)}
           </span>
+          {isGuest && <Badge variant="neutral">Convidado</Badge>}
           {isBanned && <Badge variant="danger">Banido</Badge>}
           {isPaymentPending && <Badge variant="warning">Aguard. pagamento</Badge>}
         </div>
@@ -165,7 +172,7 @@ function PresenceEntryRow({ entry, canManage, charge, onRemove, isRemoving }: Pr
                 variant="danger"
                 size="sm"
                 loading={isRemoving}
-                onClick={() => { onRemove(entry.memberId); setConfirming(false) }}
+                onClick={() => { onRemove(); setConfirming(false) }}
               >
                 Remover
               </Button>
@@ -396,6 +403,124 @@ function ReceiptModal({ groupId, chargeId, amount, pixKey, onClose }: ReceiptMod
   )
 }
 
+interface AddGuestModalProps {
+  groupId: string
+  matchId: string
+  sport: import('@/lib/api/groups').Sport
+  onClose: () => void
+}
+
+function AddGuestModal({ groupId, matchId, sport, onClose }: AddGuestModalProps) {
+  const [name, setName] = useState('')
+  const [skill, setSkill] = useState('')
+  const [position, setPosition] = useState<PlayerPosition | ''>('')
+  const [errors, setErrors] = useState<{ name?: string; skill?: string; position?: string }>({})
+  const addGuest = useAddGuest(groupId, matchId)
+
+  const positions = POSITIONS_BY_SPORT[sport] ?? []
+
+  function validate(): AddGuestPayload | null {
+    const e: typeof errors = {}
+    if (!name.trim()) e.name = 'Nome é obrigatório.'
+    else if (name.trim().length > 100) e.name = 'Máximo 100 caracteres.'
+    const skillNum = parseFloat(skill)
+    if (!skill) e.skill = 'Nota é obrigatória.'
+    else if (isNaN(skillNum) || skillNum < 1.0 || skillNum > 5.0) e.skill = 'Nota entre 1,0 e 5,0.'
+    if (!position) e.position = 'Posição é obrigatória.'
+    setErrors(e)
+    if (Object.keys(e).length > 0) return null
+    return { name: name.trim(), skill: skillNum, position: position as PlayerPosition }
+  }
+
+  function handleSubmit() {
+    const payload = validate()
+    if (!payload) return
+    addGuest.mutate(payload, {
+      onSuccess: () => {
+        toast.success('Convidado adicionado!')
+        onClose()
+      },
+      onError: (error) => toast.error(apiErr(error)),
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-4 pb-4 sm:pb-0">
+      <div className="w-full max-w-md rounded-card bg-arena-surface border border-arena-border shadow-xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-arena-border">
+          <h3 className="font-display text-title text-arena-text">Adicionar convidado</h3>
+          <button onClick={onClose} className="text-arena-muted hover:text-arena-text">
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <div className="p-5 flex flex-col gap-4">
+          {/* Nome */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-arena-text">Nome</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nome do convidado"
+              maxLength={100}
+              className="w-full rounded-lg border border-arena-border bg-arena-raised px-3 py-2 text-sm text-arena-text placeholder:text-arena-muted focus:outline-none focus:ring-2 focus:ring-arena-accent/40"
+            />
+            {errors.name && <p className="text-xs text-arena-danger">{errors.name}</p>}
+          </div>
+
+          {/* Nota */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-arena-text">Nota (1,0 – 5,0)</label>
+            <input
+              type="number"
+              value={skill}
+              onChange={(e) => setSkill(e.target.value)}
+              placeholder="Ex: 3.5"
+              min={1.0}
+              max={5.0}
+              step={0.5}
+              className="w-full rounded-lg border border-arena-border bg-arena-raised px-3 py-2 text-sm text-arena-text placeholder:text-arena-muted focus:outline-none focus:ring-2 focus:ring-arena-accent/40"
+            />
+            {errors.skill && <p className="text-xs text-arena-danger">{errors.skill}</p>}
+          </div>
+
+          {/* Posição */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-arena-text">Posição</label>
+            <select
+              value={position}
+              onChange={(e) => setPosition(e.target.value as PlayerPosition)}
+              className="w-full rounded-lg border border-arena-border bg-arena-raised px-3 py-2 text-sm text-arena-text focus:outline-none focus:ring-2 focus:ring-arena-accent/40"
+            >
+              <option value="">Selecione a posição</option>
+              {positions.map((p) => (
+                <option key={p} value={p}>{POSITION_LABELS[p]}</option>
+              ))}
+            </select>
+            {errors.position && <p className="text-xs text-arena-danger">{errors.position}</p>}
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <Button variant="ghost" size="md" className="flex-1" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              className="flex-1"
+              loading={addGuest.isPending}
+              onClick={handleSubmit}
+            >
+              Adicionar
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function MatchDetailPage() {
   const { id: groupId, matchId } = useParams<{ id: string; matchId: string }>()
   const router = useRouter()
@@ -412,7 +537,12 @@ export default function MatchDetailPage() {
   const { data: matchCharges } = useMatchCharges(groupId, matchId, canManage && groupHasFee)
 
   const myMatchCharge = myCharges?.find((c) => c.referenceMatchId === matchId) ?? null
-  const chargeByMember = new Map(matchCharges?.map((c) => [c.memberId, c]) ?? [])
+  const chargeByMember = new Map(
+    matchCharges?.filter((c) => c.memberId != null).map((c) => [c.memberId!, c]) ?? [],
+  )
+  const chargeByGuest = new Map(
+    matchCharges?.filter((c) => c.guestId != null).map((c) => [c.guestId!, c]) ?? [],
+  )
 
   const confirmPresence = useConfirmPresence(groupId, matchId)
   const declinePresence = useDeclinePresence(groupId, matchId)
@@ -421,10 +551,12 @@ export default function MatchDetailPage() {
   const closePresenceList = useClosePresenceList(groupId, matchId)
   const adminForce = useAdminForcePresence(groupId, matchId)
   const adminRemove = useAdminRemovePresence(groupId, matchId)
+  const removeGuest = useRemoveGuest(groupId, matchId)
 
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [showReceiptModal, setShowReceiptModal] = useState(false)
   const [receiptCharge, setReceiptCharge] = useState<{ chargeId: string; amount: number } | null>(null)
+  const [showAddGuestModal, setShowAddGuestModal] = useState(false)
 
   function openReceiptModal(chargeId: string, amount: number) {
     setReceiptCharge({ chargeId, amount })
@@ -515,6 +647,13 @@ export default function MatchDetailPage() {
   function handleRemovePresence(memberId: string) {
     adminRemove.mutate(memberId, {
       onSuccess: () => toast.success('Membro removido da lista.'),
+      onError: (error) => toast.error(apiErr(error)),
+    })
+  }
+
+  function handleRemoveGuest(guestId: string) {
+    removeGuest.mutate(guestId, {
+      onSuccess: () => toast.success('Convidado removido.'),
       onError: (error) => toast.error(apiErr(error)),
     })
   }
@@ -781,6 +920,15 @@ export default function MatchDetailPage() {
                   </Button>
                 )}
 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddGuestModal(true)}
+                >
+                  <UserPlus className="size-3.5" />
+                  Adicionar convidado
+                </Button>
+
                 {!confirmCancel ? (
                   <Button
                     variant="danger"
@@ -836,16 +984,28 @@ export default function MatchDetailPage() {
                     <p className="px-4 py-4 text-sm text-arena-muted">Nenhum confirmado ainda.</p>
                   ) : (
                     <div className="divide-y divide-arena-border">
-                      {presenceList.confirmed.map((entry) => (
-                        <PresenceEntryRow
-                          key={entry.id}
-                          entry={entry}
-                          canManage={canManage}
-                          charge={canManage && groupHasFee ? chargeByMember.get(entry.memberId) : undefined}
-                          onRemove={canManage ? handleRemovePresence : undefined}
-                          isRemoving={adminRemove.isPending}
-                        />
-                      ))}
+                      {presenceList.confirmed.map((entry) => {
+                        const charge = canManage && groupHasFee
+                          ? (entry.type === 'GUEST'
+                            ? chargeByGuest.get(entry.guestId!)
+                            : chargeByMember.get(entry.memberId!))
+                          : undefined
+                        const removeHandler = canManage
+                          ? entry.type === 'GUEST'
+                            ? () => handleRemoveGuest(entry.guestId!)
+                            : () => handleRemovePresence(entry.memberId!)
+                          : undefined
+                        return (
+                          <PresenceEntryRow
+                            key={entry.id}
+                            entry={entry}
+                            canManage={canManage}
+                            charge={charge}
+                            onRemove={removeHandler}
+                            isRemoving={adminRemove.isPending || removeGuest.isPending}
+                          />
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -922,6 +1082,16 @@ export default function MatchDetailPage() {
           amount={receiptCharge.amount}
           pixKey={group?.pixKey ?? null}
           onClose={() => setShowReceiptModal(false)}
+        />
+      )}
+
+      {/* Modal adicionar convidado */}
+      {showAddGuestModal && group && (
+        <AddGuestModal
+          groupId={groupId}
+          matchId={matchId}
+          sport={group.sport}
+          onClose={() => setShowAddGuestModal(false)}
         />
       )}
     </div>
