@@ -59,22 +59,25 @@ function buildWhatsAppText(
   confirmed: import('@/lib/api/matches').PresenceEntry[],
 ): string {
   const available = match.maxPlayers - match.confirmedCount
+  const divider = '━━━━━━━━━━━━━━━━'
   const lines: string[] = []
 
-  if (groupName) lines.push(`*${groupName}*`)
-  lines.push(`Partida — ${formatDate(match.scheduledAt)} às ${formatTime(match.scheduledAt)}`)
+  if (groupName) lines.push(`⚽ *${groupName}*`)
+  lines.push(divider)
   lines.push('')
-  lines.push(`Local: ${match.locationName}`)
-  if (match.locationAddress) lines.push(match.locationAddress)
+  lines.push(`📅 *${formatDate(match.scheduledAt)}* às *${formatTime(match.scheduledAt)}*`)
+  lines.push(`📍 ${match.locationName}`)
+  if (match.locationAddress) lines.push(`    ${match.locationAddress}`)
 
   if (matchFee && matchFee > 0) {
-    lines.push(`Valor: ${formatCurrency(matchFee)}`)
-    if (pixKey) lines.push(`Pix: ${pixKey}`)
+    lines.push(`💰 ${formatCurrency(matchFee)}`)
+    if (pixKey) lines.push(`    Pix: \`${pixKey}\``)
   }
 
   lines.push('')
+  lines.push(divider)
   lines.push(
-    `Confirmados: ${match.confirmedCount}/${match.maxPlayers} — ${available} vaga${available !== 1 ? 's' : ''} disponível`,
+    `👥 *${match.confirmedCount}/${match.maxPlayers} confirmados* · ${available} vaga${available !== 1 ? 's' : ''} disponível`,
   )
 
   if (confirmed.length > 0) {
@@ -86,7 +89,7 @@ function buildWhatsAppText(
 
   if (match.waitingCount > 0) {
     lines.push('')
-    lines.push(`Fila de espera: ${match.waitingCount} pessoa${match.waitingCount !== 1 ? 's' : ''}`)
+    lines.push(`⏳ *Fila de espera:* ${match.waitingCount} pessoa${match.waitingCount !== 1 ? 's' : ''}`)
   }
 
   return lines.join('\n')
