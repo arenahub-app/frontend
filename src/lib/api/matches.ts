@@ -5,6 +5,7 @@ import type { PendingCharge } from './payments'
 export type MatchStatus = 'SCHEDULED' | 'CANCELLED'
 export type PresenceListStatus = 'OPEN' | 'CLOSED'
 export type PresenceStatus = 'CONFIRMED' | 'DECLINED' | 'BANNED_PENDING' | 'PAYMENT_PENDING'
+export type GuestStatus = 'CONFIRMED' | 'PAYMENT_PENDING'
 
 export const MATCH_STATUS_LABELS: Record<MatchStatus, string> = {
   SCHEDULED: 'Agendada',
@@ -56,13 +57,34 @@ export interface Match {
 
 export interface PresenceEntry {
   id: string
-  memberId: string
+  type: 'MEMBER' | 'GUEST'
+  memberId: string | null
+  guestId: string | null
   userName: string | null
   role: string | null
   skill: number | null
   position: PlayerPosition | null
   status: PresenceStatus
+  guestStatus: GuestStatus | null
   confirmedAt: string | null
+}
+
+export interface MatchGuest {
+  id: string
+  matchId: string
+  name: string
+  skill: number
+  position: PlayerPosition
+  status: GuestStatus
+  chargeId: string | null
+  confirmedAt: string | null
+  createdAt: string
+}
+
+export interface AddGuestPayload {
+  name: string
+  skill: number
+  position: PlayerPosition
 }
 
 export interface WaitingEntry {
@@ -156,6 +178,16 @@ export const matchesApi = {
   adminRemovePresence: (groupId: string, matchId: string, memberId: string) =>
     apiClient
       .delete(`/groups/${groupId}/matches/${matchId}/presence/${memberId}`)
+      .then((r) => r.data),
+
+  addGuest: (groupId: string, matchId: string, payload: AddGuestPayload) =>
+    apiClient
+      .post<MatchGuest>(`/groups/${groupId}/matches/${matchId}/guests`, payload)
+      .then((r) => r.data),
+
+  removeGuest: (groupId: string, matchId: string, guestId: string) =>
+    apiClient
+      .delete(`/groups/${groupId}/matches/${matchId}/guests/${guestId}`)
       .then((r) => r.data),
 
   banMember: (groupId: string, memberId: string, reason: string) =>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { matchesApi, type CreateMatchPayload, type UpdateMatchPayload } from '@/lib/api/matches'
+import { matchesApi, type AddGuestPayload, type CreateMatchPayload, type UpdateMatchPayload } from '@/lib/api/matches'
 
 export function useMatches(groupId: string, filter?: 'upcoming' | 'past' | 'all') {
   return useQuery({
@@ -123,6 +123,30 @@ export function useAdminRemovePresence(groupId: string, matchId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['presence', groupId, matchId] })
       qc.invalidateQueries({ queryKey: ['match', groupId, matchId] })
+    },
+  })
+}
+
+export function useAddGuest(groupId: string, matchId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: AddGuestPayload) => matchesApi.addGuest(groupId, matchId, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['presence', groupId, matchId] })
+      qc.invalidateQueries({ queryKey: ['match', groupId, matchId] })
+      qc.invalidateQueries({ queryKey: ['match-charges', groupId, matchId] })
+    },
+  })
+}
+
+export function useRemoveGuest(groupId: string, matchId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (guestId: string) => matchesApi.removeGuest(groupId, matchId, guestId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['presence', groupId, matchId] })
+      qc.invalidateQueries({ queryKey: ['match', groupId, matchId] })
+      qc.invalidateQueries({ queryKey: ['match-charges', groupId, matchId] })
     },
   })
 }
