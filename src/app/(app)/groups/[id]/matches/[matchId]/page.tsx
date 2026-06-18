@@ -80,9 +80,21 @@ function buildWhatsAppText(
     `👥 *${match.confirmedCount}/${match.maxPlayers} confirmados* · ${available} vaga${available !== 1 ? 's' : ''} disponível`,
   )
 
-  if (confirmed.length > 0) {
+  const pagos = confirmed.filter((e) => e.status === 'CONFIRMED')
+  const pendentes = confirmed.filter((e) => e.status === 'PAYMENT_PENDING')
+
+  if (pagos.length > 0) {
     lines.push('')
-    confirmed.forEach((entry, i) => {
+    if (pendentes.length > 0) lines.push('✅ *Pagamento confirmado*')
+    pagos.forEach((entry, i) => {
+      lines.push(`${i + 1}. ${entry.userName ?? `Jogador ${i + 1}`}`)
+    })
+  }
+
+  if (pendentes.length > 0) {
+    lines.push('')
+    lines.push('⏳ *Aguardando pagamento*')
+    pendentes.forEach((entry, i) => {
       lines.push(`${i + 1}. ${entry.userName ?? `Jogador ${i + 1}`}`)
     })
   }
