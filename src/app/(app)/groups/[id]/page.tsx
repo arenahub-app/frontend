@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Settings, Link2, Copy, Check, Plus, Loader2, Users, Calendar, MapPin, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Settings, Link2, Copy, Check, Plus, Loader2, Users, Calendar, MapPin, ChevronRight, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge, Button, Select } from '@/components/ui'
 import { useGroup, useGroupMembers, useGroupInvites, useGenerateInvite, useUpdateMember } from '@/lib/hooks/use-groups'
 import { useMatches } from '@/lib/hooks/use-matches'
+import { useActiveVoting } from '@/lib/hooks/use-votings'
 import {
   SPORT_LABELS,
   ROLE_BADGE_VARIANT,
@@ -39,6 +40,7 @@ export default function GroupPage() {
   const { data: members, isLoading: loadingMembers } = useGroupMembers(id)
   const { data: invites, isLoading: loadingInvites } = useGroupInvites(id)
   const { data: upcomingMatches } = useMatches(id, 'upcoming')
+  const { data: activeVoting } = useActiveVoting(id)
   const generateInvite = useGenerateInvite(id)
 
   const nextMatch = upcomingMatches?.[0] ?? null
@@ -241,6 +243,54 @@ export default function GroupPage() {
                 >
                   <Plus className="size-4" />
                   Criar
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Votação ativa */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-title text-arena-text">Votação de Habilidades</h2>
+            <Link
+              href={`/groups/${id}/voting`}
+              className="text-sm text-arena-accent hover:underline flex items-center gap-0.5"
+            >
+              Ver
+              <ChevronRight className="size-4" />
+            </Link>
+          </div>
+
+          {activeVoting ? (
+            <Link
+              href={`/groups/${id}/voting`}
+              className="block rounded-card border border-arena-border bg-arena-surface p-4 hover:border-arena-accent/40 transition-colors"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <Badge variant="success" className="mb-1">Aberta</Badge>
+                  <div className="flex items-center gap-1.5 text-sm text-arena-text mt-1">
+                    <Star className="size-3.5 shrink-0 text-yellow-400" />
+                    <span>
+                      {activeVoting.myVoteCount} de {activeVoting.totalVotable} votos emitidos
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="size-4 text-arena-muted shrink-0" />
+              </div>
+            </Link>
+          ) : (
+            <div className="rounded-card border border-arena-border bg-arena-surface p-4 flex items-center justify-between gap-3">
+              <p className="text-sm text-arena-muted">Nenhuma votação ativa.</p>
+              {canManage && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link href={`/groups/${id}/voting`} />}
+                >
+                  <Plus className="size-4" />
+                  Iniciar
                 </Button>
               )}
             </div>
