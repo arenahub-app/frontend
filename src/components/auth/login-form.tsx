@@ -72,14 +72,13 @@ export function LoginForm() {
       </CardHeader>
 
       <CardContent className="gap-4">
-        <button
-          type="button"
-          disabled
-          className="flex w-full items-center justify-center gap-2 min-h-[44px] rounded-lg border border-arena-border bg-arena-raised px-4 text-sm font-medium text-arena-muted cursor-not-allowed opacity-50"
+        <a
+          href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/oauth2/authorization/google`}
+          className="flex w-full items-center justify-center gap-2 min-h-[44px] rounded-lg border border-arena-border bg-arena-raised px-4 text-sm font-medium text-arena-text hover:bg-arena-surface transition-colors"
         >
           <GoogleIcon />
           Continuar com Google
-        </button>
+        </a>
 
         <Divider label="ou" />
 
